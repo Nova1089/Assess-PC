@@ -34,35 +34,29 @@ function Show-TimeStamp
 
 function Confirm-WindowsVersionInfo
 {
-    $version = [System.Environment]::OSVersion | Select-Object -ExpandProperty Version
-    if ($null -eq $version) { return }
-
-    if (($version.Build) -ge 22000)
+    $edition = Get-CimInstance -ClassName 'Win32_OperatingSystem' | Select-Object -ExpandProperty Caption
+    $edition = $edition.Replace("Microsoft ", "")
+    $versionInfo = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\'
+    if ($edition -eq "Windows 11 Pro")
     {
-        Write-Host "Windows version 11." -ForegroundColor Green
+        Write-Host "$edition $($versionInfo.DisplayVersion) (OS Build $($versionInfo.CurrentBuildNumber).$($versionInfo.UBR))" -ForegroundColor Green
     }
     else
     {
-        Write-Host "Windows is NOT version 11." -ForegroundColor Red
+        Write-Host "$edition $($versionInfo.DisplayVersion) (OS Build $($versionInfo.CurrentBuildNumber).$($versionInfo.UBR))" -ForegroundColor Yellow
     }
+    # Version numbers for Win 11: https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information
+    # Version numbers for Win 10: https://learn.microsoft.com/en-us/windows/release-health/release-information
+}
 
-    # version numbers for Win 11: https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information
-    # version numbers for Win 10: https://learn.microsoft.com/en-us/windows/release-health/release-information
-
-    $edition = Get-WindowsEdition -Online -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Edition 
-    if ($null -eq $edition) { return }
-
-    if ($edition -eq "Professional")
+function Show-LocalUsers
+{
+    Write-Host "Local users:" -ForegroundColor DarkCyan
+    $localUsers = Get-LocalUser | Where-Object { ($_.Enabled -eq $true) -or ($_.Description -eq "")} | Select-Object -Property @("Name", "Enabled", "LastLogon")
+    $localUsers | Out-Host
+    if ($localUsers.Count -gt 2)
     {
-        Write-Host "Windows Pro edition." -ForegroundColor Green
-    }
-    elseif ($edition -eq "Enterprise")
-    {
-        Write-Warning "Windows edition is Enterprise, but was expected to be Pro."
-    }
-    else
-    {
-        Write-Host "Not Windows Pro edition. Edition is $edition." -ForegroundColor Red
+        Write-Warning "There are more than 2 local users on this PC."
     }
 }
 
@@ -425,6 +419,7 @@ Test-SessionPrivileges
 Show-TimeStamp
 Confirm-WindowsVersionInfo
 Confirm-BIOSVersionInfo
+Show-LocalUsers
 Confirm-DeviceNamedCorrectly
 Confirm-JoinedToAzureAD
 Confirm-FreshServiceReady
