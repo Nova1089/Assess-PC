@@ -1,9 +1,12 @@
 <#
+Version 1.4
+
 1. Run Powershell as an admin.
     Right-click Start button and select Terminal (Admin).
 2. Connect USB drive with the script on it. 
     Note: Script should be placed on all imaging USB drives in a Scripts folder.
-3. Run the script by entering the following command: 
+3. Run the script:
+    Look for Run-AssessPC.cmd in the same folder and run that. If you don't have that, run the following command:
     powershell.exe -ExecutionPolicy Bypass -File "D:\Scripts\Assess-PC.ps1"
     Note: Path to file in above command might change depending on the USB drive letter, script location or script name.
 4. View results from script. It will let you know if everything looks good or any specific issues that it finds (missing process, missing file, etc.).
