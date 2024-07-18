@@ -49,14 +49,14 @@ function Confirm-WindowsVersionInfo
     # Version numbers for Win 10: https://learn.microsoft.com/en-us/windows/release-health/release-information
 }
 
-function Show-LocalUsers
+function Show-UserProfiles
 {
-    Write-Host "Local users:" -ForegroundColor DarkCyan
-    $localUsers = Get-LocalUser | Where-Object { ($_.Enabled -eq $true) -or ($_.Description -eq "")} | Select-Object -Property @("Name", "Enabled", "LastLogon")
-    $localUsers | Out-Host
-    if ($localUsers.Count -gt 2)
+    Write-Host "User profiles:" -ForegroundColor DarkCyan
+    $users = Get-CimInstance -ClassName "Win32_UserProfile" | Where-Object { $_.LocalPath -ilike 'C:\Users\*' } | Select-Object -Property @("LocalPath", "LastUseTime")
+    $users | Out-Host
+    if ($users.Count -gt 2)
     {
-        Write-Warning "There are more than 2 local users on this PC."
+        Write-Warning "There are more than 2 user profiles on this PC."
     }
 }
 
@@ -419,7 +419,7 @@ Test-SessionPrivileges
 Show-TimeStamp
 Confirm-WindowsVersionInfo
 Confirm-BIOSVersionInfo
-Show-LocalUsers
+Show-UserProfiles
 Confirm-DeviceNamedCorrectly
 Confirm-JoinedToAzureAD
 Confirm-FreshServiceReady
