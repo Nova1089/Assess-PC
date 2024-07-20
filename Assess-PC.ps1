@@ -417,6 +417,51 @@ function Confirm-PageFileAutoManaged
     }
 }
 
+function Confirm-UpdatesAvailable
+{
+    # Uses the Windows Update Agent API
+    # https://learn.microsoft.com/en-us/windows/win32/api/_wua/
+    # https://learn.microsoft.com/en-us/windows/win32/wua_sdk/searching--downloading--and-installing-updates
+    # https://learn.microsoft.com/en-us/windows/win32/api/wuapi/nf-wuapi-iupdatesearcher-search
+
+    Write-Host "Checking for updates..." -ForegroundColor "DarkCyan"
+    $updateSession = New-Object -ComObject "Microsoft.Update.Session"
+    $updateSearcher = $updateSession.CreateUpdateSearcher()
+    $updates = $updateSearcher.Search("IsInstalled=0 and IsHidden=0").Updates 
+    if ($updates.Count -gt 0)
+    {
+        Write-Host "Updates are available:" -ForegroundColor "Yellow"
+        $updates | Select-Object -ExpandProperty "Title" | Write-Host -ForegroundColor "DarkCyan"
+
+    }
+    else
+    {
+        Write-Host "PC is up to date!" -ForegroundColor "Green"
+    }
+}
+
+function Prompt-YesOrNo($question)
+{
+    Write-Host "$question`n[Y] Yes  [N] No"
+
+    do
+    {
+        $response = Read-Host
+        $validResponse = $response -imatch '^\s*[yn]\s*$' # regex matches y or n but allows spaces
+        if (-not($validResponse)) 
+        {
+            Write-Warning "Please enter y or n."
+        }
+    }
+    while (-not($validResponse))
+
+    if ($response -imatch '^\s*y\s*$') # regex matches a y but allows spaces
+    {
+        return $true
+    }
+    return $false
+}
+
 # main
 Test-SessionPrivileges
 Show-TimeStamp
@@ -431,4 +476,6 @@ Confirm-AbsoluteReady
 Confirm-TPMEnabled
 Confirm-BitlockerEnabled
 Confirm-PageFileAutoManaged
+$checkForUpdates = Prompt-YesOrNo "Would you like to check for updates?"
+if ($checkForUpdates) { Confirm-UpdatesAvailable }
 Read-Host "Press Enter to exit."
